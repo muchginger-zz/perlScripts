@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+
+# ************************************************
+# Usage: nessusd [start|stop]
+#  
+#  Tested on Kali Linux 2
+#  Nessus doesn't install with an executable from
+#  bash, that annoyed me... So I wrote this.
+#
+#  This is a perl program located in /usr/bin/ that
+#  will check if Nessus is running and then either
+#  stop or start the nessusd service.
+#
+# Written by Aris Bloms 5/20/2019
+# Licensed under GNU General Public License v3
+# ************************************************
+use warnings;
+use strict;
+
+my $path = q(/etc/init.d/nessusd);
+my $command = shift or die "Usage: nessusd [start|stop]\n";
+my $running = `ps aux`;
+
+
+sub isRunning {
+	if ($running =~ m/(nessusd|nessus-service)/gi) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+sub main {	
+	scrub();
+	
+	my $bool = isRunning();
+
+	if ($command eq "start" && $bool == 1) {
+		die "Nessus is already running... Exiting...\n";
+	}
+	elsif ($command eq "stop" && $bool == 1) {
+		print "Stopping Nessus...\n";
+		system("$path $command");
+		exit(0);
+	}
+	elsif ($command eq "start" && $bool == 0) {
+		print "Starting Nessus...\n";
+		system("$path $command");
+		exit(0);
+	}
+	elsif ($command eq "stop" && $bool == 0) {
+		die "Nessus is not running... Exiting...\n";
+	}
+}
+
+sub scrub {
+	die "Usage: nessusd [start|stop]\n" unless defined $command;
+	chomp $command;
+	if (!($command eq "start" || $command eq "stop")) {
+		die "Usage: nessusd [start|stop]\n";
+	}
+}
+
+main();
